@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   DollarSign, AlertCircle, Clock, Plus, Pencil, Trash2, Settings, LayoutDashboard,
   CreditCard, FileText, Tag, RefreshCw, Loader2, X, Users, Wallet, Calendar, CalendarDays,
-  AlertTriangle, CalendarClock, CheckCircle2, ChevronRight,
+  AlertTriangle, CalendarClock, CheckCircle2, ChevronRight, Search,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { StatFilterCard } from "@/components/StatFilterCard";
 import { PageLoader } from "@/components/PageLoader";
 import CollectFeeTab from "./CollectFeeTab";
+import StudentLookupTab from "./StudentLookupTab";
 import ReportsTab from "./ReportsTab";
 
 type Frequency = "monthly" | "quarterly" | "yearly" | "one-time";
@@ -94,6 +95,7 @@ const ALL_TABS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "structure", label: "Fee Structure", icon: Settings },
   { id: "collect", label: "Collect Fee", icon: CreditCard, permission: "canManageFees" },
+  { id: "lookup", label: "Student Lookup", icon: Search },
   { id: "reports", label: "Reports", icon: FileText },
   { id: "concessions", label: "Concessions", icon: Tag },
 ];
@@ -1060,6 +1062,8 @@ export default function AdminFeesPage() {
       )}
 
       {tab === "collect" && canManage && <CollectFeeTab />}
+
+      {tab === "lookup" && <StudentLookupTab canCollect={canManage} />}
 
       {tab === "reports" && <ReportsTab classes={classes} students={students} />}
 

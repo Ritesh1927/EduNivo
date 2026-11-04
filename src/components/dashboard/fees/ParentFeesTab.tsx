@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   CreditCard, Loader2, CheckCircle2, Wallet, IndianRupee, Download, Eye, Receipt, Calendar,
   CalendarDays, FileText, ChevronDown, DollarSign, AlertCircle, CalendarClock, Clock, Tag,
-  LayoutDashboard, AlertTriangle,
+  LayoutDashboard, AlertTriangle, History,
 } from "lucide-react";
 import { getToken } from "@/contexts/AuthContext";
 import { apiGet, apiPost } from "@/lib/api";
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageLoader } from "@/components/PageLoader";
 import { StatFilterCard } from "@/components/StatFilterCard";
 
@@ -37,6 +38,8 @@ interface FeeHead {
 interface PayLine {
   label: string; months: string[]; amount: number; lateFee: number; concession: number; total: number;
 }
+interface OutstandingYear { year: string; balance: number }
+
 interface ChildFees {
   studentId: string;
   studentName: string;
@@ -44,11 +47,15 @@ interface ChildFees {
   section: string;
   feeHeads: FeeHead[];
   summary: { paid: number; pending: number; upcoming: number; total: number; totalLateFee: number; totalConcession: number };
+  outstandingPastYears: OutstandingYear[];
 }
 
 interface ChildOption { _id: string; name: string; class: string; section?: string }
 interface ParentDashboardResponse { success: boolean; data: { children: ChildOption[] } }
-interface FeeStatusResponse { success: boolean; data: { feeHeads: RawFeeHead[] } }
+interface FeeStatusResponse {
+  success: boolean;
+  data: { feeHeads: RawFeeHead[]; outstandingPastYears?: OutstandingYear[]; message?: string };
+}
 interface HistoryItem {
   _id: string; title: string; month: string | null; amount: number; lateFee: number; concession: number; paidAmount: number; receiptNo: string | null;
 }
@@ -59,7 +66,10 @@ interface HistoryResponse { success: boolean; data: { history: HistoryGroup[] } 
 interface PayMultiResponse { success: boolean; data: { payments: { _id: string }[] } }
 interface BrandingResponse {
   success: boolean;
-  data: { schoolName?: string; schoolAddress?: string; schoolPhone?: string; schoolEmail?: string; logo?: string; themeColor?: string; secondaryColor?: string };
+  data: {
+    schoolName?: string; schoolAddress?: string; schoolPhone?: string; schoolEmail?: string; logo?: string; themeColor?: string; secondaryColor?: string;
+    settings?: { academicYear?: string; pastAcademicYears?: string[] };
+  };
 }
 
 function getMonthLabel(month: string) {
@@ -129,6 +139,26 @@ export default function ParentFeesTab() {
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<HistoryGroup[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  // "" = the current session (child.feeHeads, loaded by fetchFees below); a
+  // past year loads a separate snapshot into viewYearFeeHeads instead,
+  // leaving child.feeHeads (and the Dashboard tab's stats, which always stay
+  // current-year) untouched.
+  const [viewYear, setViewYear] = useState("");
+  const [viewYearFeeHeads, setViewYearFeeHeads] = useState<FeeHead[] | null>(null);
+  const [viewYearMessage, setViewYearMessage] = useState("");
+  const [loadingViewYear, setLoadingViewYear] = useState(false);
+  const [schoolYears, setSchoolYears] = useState<{ currentYear: string; pastYears: string[] }>({ currentYear: "", pastYears: [] });
+
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+    apiGet<BrandingResponse>("/school/branding", token)
+      .then((res) => setSchoolYears({
+        currentYear: res.data.settings?.academicYear || "",
+        pastYears: res.data.settings?.pastAcademicYears || [],
+      }))
+      .catch(() => {});
+  }, []);
 
   const fetchFees = async () => {
     const token = getToken();
@@ -164,11 +194,13 @@ export default function ParentFeesTab() {
             return {
               studentId: k._id, studentName: k.name, studentClass: k.class, section: k.section || "",
               feeHeads, summary: { paid: totalPaid, pending: totalPending, upcoming: totalUpcoming, total, totalLateFee, totalConcession },
+              outstandingPastYears: feeRes.data.outstandingPastYears || [],
             };
           } catch {
             return {
               studentId: k._id, studentName: k.name, studentClass: k.class, section: k.section || "",
               feeHeads: [], summary: { paid: 0, pending: 0, upcoming: 0, total: 0, totalLateFee: 0, totalConcession: 0 },
+              outstandingPastYears: [],
             };
           }
         }),
@@ -194,7 +226,35 @@ export default function ParentFeesTab() {
   }, []);
 
   const child = children[selectedChild];
-  const activeHead = child?.feeHeads.find((fh) => fh._id === activeHeadId) || child?.feeHeads[0];
+  // The fee heads actually rendered/paid against in the Fee Details tab --
+  // the current session's (child.feeHeads) unless a past year is being
+  // viewed, in which case it's that year's own snapshot. The Dashboard
+  // tab's stats always read child.feeHeads/child.summary directly (never
+  // this), since those stay current-year-only by design.
+  const activeFeeHeads = viewYear ? (viewYearFeeHeads || []) : (child?.feeHeads || []);
+  const activeHead = activeFeeHeads.find((fh) => fh._id === activeHeadId) || activeFeeHeads[0];
+
+  const loadViewYear = (year: string) => {
+    setSelectedMonths({});
+    setActiveHeadId("");
+    if (!year) {
+      setViewYear("");
+      setViewYearFeeHeads(null);
+      setViewYearMessage("");
+      return;
+    }
+    const token = getToken();
+    if (!token || !child) return;
+    setViewYear(year);
+    setLoadingViewYear(true);
+    apiGet<FeeStatusResponse>(`/fees/student-status/${child.studentId}?academicYear=${encodeURIComponent(year)}`, token)
+      .then((res) => {
+        setViewYearFeeHeads(res.data.feeHeads || []);
+        setViewYearMessage(res.data.message || "");
+      })
+      .catch(() => { setViewYearFeeHeads([]); setViewYearMessage("Failed to load that year's fee record."); })
+      .finally(() => setLoadingViewYear(false));
+  };
 
   const fetchPaymentHistory = () => {
     if (!child) return;
@@ -239,7 +299,7 @@ export default function ParentFeesTab() {
   const toggleMonth = (feeHeadId: string, month: string) => {
     setSelectedMonths((prev) => {
       const current = prev[feeHeadId] || {};
-      const fh = child?.feeHeads.find((f) => f._id === feeHeadId);
+      const fh = activeFeeHeads.find((f) => f._id === feeHeadId);
       if (!fh) return prev;
       const sorted = [...fh.months].sort((a, b) => a.month.localeCompare(b.month));
       const firstUnpaidIdx = sorted.findIndex((m) => !m.paid);
@@ -277,7 +337,9 @@ export default function ParentFeesTab() {
 
   const clearSelection = () => setSelectedMonths({});
 
-  const summary = (child?.feeHeads || []).reduce(
+  const pastDuesBlockCurrentYear = !viewYear && (child?.outstandingPastYears.length || 0) > 0;
+
+  const summary = activeFeeHeads.reduce(
     (acc, fh) => {
       const selected = Object.entries(selectedMonths[fh._id] || {}).filter(([, v]) => v).map(([k]) => k);
       if (selected.length === 0) return acc;
@@ -321,11 +383,15 @@ export default function ParentFeesTab() {
 
   const handlePay = async () => {
     if (!child || summary.total <= 0) return;
+    if (pastDuesBlockCurrentYear) {
+      toast.error(`Clear pending fees from ${child.outstandingPastYears[0].year} before paying this session's fees.`);
+      return;
+    }
     const token = getToken();
     if (!token) return;
 
     const items: { feeStructureId: string; months: string[] }[] = [];
-    for (const fh of child.feeHeads || []) {
+    for (const fh of activeFeeHeads) {
       const selected = Object.entries(selectedMonths[fh._id] || {}).filter(([, v]) => v).map(([k]) => k);
       if (selected.length > 0) items.push({ feeStructureId: fh._id, months: selected });
     }
@@ -359,11 +425,17 @@ export default function ParentFeesTab() {
             setPayModal(null);
             setSelectedMonths({});
 
+            // Refetch the SAME year that was just paid (a past-year payment
+            // must not refetch the current session -- that query wouldn't
+            // even include the structure that was just paid against).
+            const paidYear = viewYear;
             try {
+              const yearQs = paidYear ? `?academicYear=${encodeURIComponent(paidYear)}` : "";
               const [branding, feeRes2] = await Promise.all([
                 fetchBranding(token),
-                apiGet<FeeStatusResponse>(`/fees/student-status/${child.studentId}`, token),
+                apiGet<FeeStatusResponse>(`/fees/student-status/${child.studentId}${yearQs}`, token),
               ]);
+              if (paidYear) setViewYearFeeHeads(feeRes2.data.feeHeads || []);
               const paidMonths = (feeRes2.data.feeHeads || []).flatMap((fh) =>
                 (fh.months || []).filter((m) => m.paid).map((m) => ({
                   feeHead: fh.title, month: m.month, amount: m.amount,
@@ -371,13 +443,13 @@ export default function ParentFeesTab() {
                 })),
               );
               const justPaid = paidMonths.filter((p) => {
-                for (const fh of child.feeHeads) {
+                for (const fh of activeFeeHeads) {
                   const sel = Object.entries(selectedMonths[fh._id] || {}).filter(([, v]) => v).map(([k]) => k);
                   if (sel.includes(p.month) && p.feeHead === fh.title) return true;
                 }
                 return false;
               });
-              const selectedMonthCount = child.feeHeads.reduce(
+              const selectedMonthCount = activeFeeHeads.reduce(
                 (n, fh) => n + Object.values(selectedMonths[fh._id] || {}).filter(Boolean).length,
                 0,
               );
@@ -443,6 +515,9 @@ export default function ParentFeesTab() {
                   if (typeof window !== "undefined") localStorage.setItem(SELECTED_CHILD_KEY, String(i));
                   setSelectedMonths({});
                   setActiveHeadId("");
+                  setViewYear("");
+                  setViewYearFeeHeads(null);
+                  setViewYearMessage("");
                 }}
                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${i === selectedChild ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-muted/50"}`}
               >
@@ -523,10 +598,42 @@ export default function ParentFeesTab() {
           </TabsContent>
 
           <TabsContent value="fees" className="space-y-6">
-            {child.feeHeads.length === 0 ? (
+            {(child.outstandingPastYears.length > 0 || schoolYears.pastYears.length > 0) && (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                {schoolYears.pastYears.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <History className="h-4 w-4 text-muted-foreground" />
+                    <Select value={viewYear || "current"} onValueChange={(v) => loadViewYear(v === "current" || !v ? "" : v)}>
+                      <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="current">{schoolYears.currentYear || "Current session"} (current)</SelectItem>
+                        {schoolYears.pastYears.map((y) => (
+                          <SelectItem key={y} value={y}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {child.outstandingPastYears.length > 0 && (
+                  <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      {fmt(child.outstandingPastYears[0].balance)} pending from {child.outstandingPastYears[0].year}. Clear it before paying this session&apos;s fees.
+                    </span>
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-amber-800 hover:bg-amber-100 dark:text-amber-400" onClick={() => loadViewYear(child.outstandingPastYears[0].year)}>
+                      View
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {loadingViewYear ? (
+              <PageLoader compact label="Loading that year's fee record..." />
+            ) : activeFeeHeads.length === 0 ? (
               <div className="rounded-[18px] bg-card py-16 text-center shadow-[0_0_0_1px_rgba(15,23,42,0.07)]">
                 <Wallet className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-muted-foreground">No fee structures found for your child&apos;s class.</p>
+                <p className="text-muted-foreground">{viewYear ? (viewYearMessage || `No fee record found for ${viewYear}.`) : "No fee structures found for your child's class."}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
@@ -538,7 +645,7 @@ export default function ParentFeesTab() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                      {child.feeHeads.map((fh) => {
+                      {activeFeeHeads.map((fh) => {
                         const fc = headCounts(fh);
                         const fm = FREQ_META[fh.frequency] || FREQ_META.monthly;
                         const FI = fm.icon;
@@ -701,7 +808,7 @@ export default function ParentFeesTab() {
                     })()}
 
                     {/* Collapsed rows for every other head — click to switch */}
-                    {child.feeHeads.filter((fh) => fh._id !== activeHead?._id).map((fh) => {
+                    {activeFeeHeads.filter((fh) => fh._id !== activeHead?._id).map((fh) => {
                       const fc = headCounts(fh);
                       const fm = FREQ_META[fh.frequency] || FREQ_META.monthly;
                       const FI = fm.icon;
@@ -810,12 +917,16 @@ export default function ParentFeesTab() {
                             onClick={() => {
                               setPayModal({ open: true, lines: summary.lines, total: summary.total });
                             }}
-                            disabled={paying || summary.itemCount === 0}
+                            disabled={paying || summary.itemCount === 0 || pastDuesBlockCurrentYear}
                           >
                             {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : <IndianRupee className="h-4 w-4" />}
                             {paying ? "Processing..." : `Pay ₹${summary.total.toLocaleString("en-IN")} via Razorpay`}
                           </Button>
-                          <p className="text-center text-xs text-muted-foreground">Online payment via Razorpay — full amount only</p>
+                          {pastDuesBlockCurrentYear ? (
+                            <p className="text-center text-xs font-medium text-amber-700 dark:text-amber-400">Clear last year&apos;s pending fees first — see the banner above.</p>
+                          ) : (
+                            <p className="text-center text-xs text-muted-foreground">Online payment via Razorpay — full amount only</p>
+                          )}
                         </div>
                       </div>
                     </div>

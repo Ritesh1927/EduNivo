@@ -8,6 +8,8 @@ import { Student } from "@/models/Student";
 import { Admin } from "@/models/Admin";
 import { Parent } from "@/models/Parent";
 import { calcProjectedLateFee, concessionAppliesToMonth, dueDateForMonth, generateSessionMonths, filterMonthsByAdmission } from "@/lib/feeEngine";
+import { getCurrentAcademicYear } from "@/lib/academicYear";
+import { getOutstandingPastYears } from "@/lib/feeDues";
 
 interface PayMultiItem {
   feeStructureId: string;
@@ -67,6 +69,31 @@ export async function POST(req: Request) {
     const school = await Admin.findById(auth.schoolId).select("settings");
     const lateFeeConfig = school?.settings?.lateFee || {};
 
+    // Blanket gate: a student with ANY outstanding past-year balance can't
+    // pay current-year fees at all until every past year is cleared, even
+    // if this request's items don't overlap the same fee head -- confirmed
+    // scope, see getOutstandingPastYears in src/lib/feeDues.ts (the single
+    // place this rule is computed, shared with the UI banners). Past-year
+    // items themselves are never blocked; that's the whole point of making
+    // them payable again from here. Checked before any write happens, so a
+    // mixed request never partially commits.
+    const currentYear = await getCurrentAcademicYear(auth.schoolId);
+    const outstandingPastYears = await getOutstandingPastYears(auth.schoolId, studentId, currentYear);
+    if (outstandingPastYears.length > 0) {
+      const requestedStructureIds = items.map((i) => i.feeStructureId).filter(Boolean);
+      const targetedStructures = await FeeStructure.find({ _id: { $in: requestedStructureIds }, school: auth.schoolId }).select("academicYear");
+      const targetsCurrentYear = targetedStructures.some((fs) => (fs.academicYear || currentYear) === currentYear);
+      if (targetsCurrentYear) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Clear pending fees from ${outstandingPastYears[0].year} before paying this student's current-year fees.`,
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     const concessions = await Concession.find({ school: auth.schoolId, student: studentId });
 
     const payments = [];
@@ -89,8 +116,13 @@ export async function POST(req: Request) {
       let orderedMonths: string[] = [];
       const paidInStructure = new Set<string>();
       if (fs.frequency === "monthly") {
+        // The structure's own academicYear decides which session's months
+        // to order against -- paying a past year's monthly head (now
+        // reachable again via the past-year payment gate above) must order
+        // against THAT year, not always the current calendar year.
+        const structureYearStart = fs.academicYear ? parseInt(fs.academicYear.slice(0, 4), 10) : null;
         orderedMonths = filterMonthsByAdmission(
-          generateSessionMonths(school?.settings?.sessionStartMonth || "April", new Date().getFullYear()),
+          generateSessionMonths(school?.settings?.sessionStartMonth || "April", structureYearStart || new Date().getFullYear()),
           student.admissionDate,
         );
         const paidDocs = await FeePayment.find({
