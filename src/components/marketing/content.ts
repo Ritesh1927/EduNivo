@@ -14,9 +14,13 @@ import {
 export const BRAND = {
   name: "EduNivo",
   tagline: "School ERP",
-  email: "hello@edusync.in",
-  phone: "+91 98765 43210",
-  address: "Bengaluru, Karnataka, India",
+  email: "contact@eleviqtechnologies.com",
+  phone: "+91 96546 63440",
+  address: "House No. 17A, Street No. 19D, Molarband Extension, Badarpur Border, New Delhi, Delhi",
+  /** Registered legal entity operating EduNivo -- a proprietorship, so the proprietor's name is the legal identity. */
+  legalEntity: "ElevIQ Technologies",
+  proprietor: "Upasana Yadav",
+  gstin: "07AJLPY8025B1Z0",
   /** Product demo video (YouTube embed URL). Empty = "Watch Video" opens the live dashboard tour instead. */
   demoVideoUrl: "",
 };
@@ -26,7 +30,7 @@ export const NAV_LINKS = [
   { href: "#features", label: "Features" },
   { href: "#modules", label: "Modules" },
   { href: "#why", label: "Why EduNivo" },
-  { href: "#pricing", label: "Pricing" },
+  { href: "/pricing", label: "Pricing" },
   { href: "#testimonials", label: "Testimonials" },
   { href: "#contact", label: "Contact" },
 ];
@@ -125,9 +129,10 @@ export const FAQS = [
 ];
 
 export const FOOTER_COLUMNS = [
-  { title: "Company", links: [{ label: "About Us", href: "#why" }, { label: "Why EduNivo", href: "#why" }, { label: "Testimonials", href: "#testimonials" }, { label: "Contact", href: "#contact" }] },
-  { title: "Modules", links: [{ label: "Admissions", href: "#modules" }, { label: "Attendance", href: "#modules" }, { label: "Fees & Payment", href: "#modules" }, { label: "Examination", href: "#modules" }, { label: "Parent App", href: "#apps" }] },
-  { title: "Resources", links: [{ label: "Product Tour", href: "#features" }, { label: "How It Works", href: "#how" }, { label: "FAQs", href: "#faq" }, { label: "Mobile Apps", href: "#apps" }] },
-  { title: "Support", links: [{ label: "Book a Demo", href: "#contact" }, { label: "Login", href: "/login" }, { label: "Help Center", href: "#faq" }] },
+  { title: "Company", links: [{ label: "About Us", href: "/about" }, { label: "Why EduNivo", href: "/#why" }, { label: "Pricing", href: "/pricing" }, { label: "Testimonials", href: "/#testimonials" }, { label: "Contact", href: "/contact" }] },
+  { title: "Modules", links: [{ label: "Admissions", href: "/#modules" }, { label: "Attendance", href: "/#modules" }, { label: "Fees & Payment", href: "/#modules" }, { label: "Examination", href: "/#modules" }, { label: "Parent App", href: "/#apps" }] },
+  { title: "Resources", links: [{ label: "Product Tour", href: "/#features" }, { label: "How It Works", href: "/#how" }, { label: "FAQs", href: "/#faq" }, { label: "Mobile Apps", href: "/#apps" }] },
+  { title: "Support", links: [{ label: "Book a Demo", href: "/contact" }, { label: "Login", href: "/login" }, { label: "Help Center", href: "/#faq" }] },
+  { title: "Legal", links: [{ label: "Terms & Conditions", href: "/terms" }, { label: "Privacy Policy", href: "/privacy" }, { label: "Refund Policy", href: "/refund-policy" }] },
 ];
 

@@ -9,6 +9,7 @@ import { Lead } from "@/models/Lead";
 // POST /api/leads -- public homepage enquiries (no auth).
 //   { kind: "demo", schoolName, contactPerson, phone, email, city, students }
 //   { kind: "newsletter", email }
+//   { kind: "contact", contactPerson, email, phone?, message }
 // Saved to the Lead collection, then emailed to the support inbox.
 // Spam protection: per-IP rate limit + a hidden honeypot field ("website").
 
@@ -31,7 +32,16 @@ const newsletterSchema = z.object({
   website: z.string().max(0).optional(),
 });
 
-const bodySchema = z.discriminatedUnion("kind", [demoSchema, newsletterSchema]);
+const contactSchema = z.object({
+  kind: z.literal("contact"),
+  contactPerson: text(80).min(2, "Please enter your name."),
+  email: z.email("Enter a valid email address.").max(160),
+  phone: z.string().trim().max(20).optional().or(z.literal("")),
+  message: text(2000).min(5, "Please enter a message."),
+  website: z.string().max(0).optional(),
+});
+
+const bodySchema = z.discriminatedUnion("kind", [demoSchema, newsletterSchema, contactSchema]);
 
 export async function POST(req: Request) {
   const raw = await req.json().catch(() => null);
@@ -78,14 +88,29 @@ export async function POST(req: Request) {
               ["City", input.city],
               ["Students", input.students],
             ]
-          : [["Email", input.email]];
+          : input.kind === "contact"
+            ? [
+                ["Name", input.contactPerson],
+                ["Email", input.email],
+                ["Phone", input.phone || "—"],
+                ["Message", input.message],
+              ]
+            : [["Email", input.email]];
+      const subject =
+        input.kind === "demo"
+          ? `Demo request: ${input.schoolName} (${input.city})`
+          : input.kind === "contact"
+            ? `Contact form: ${input.contactPerson}`
+            : "Newsletter sign-up";
+      const heading =
+        input.kind === "demo" ? "New demo request" : input.kind === "contact" ? "New contact form message" : "New newsletter sign-up";
       const html = `<div style="font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#101828">
-<h2 style="margin:0 0 12px;color:#1F6FA6">${input.kind === "demo" ? "New demo request" : "New newsletter sign-up"}</h2>
+<h2 style="margin:0 0 12px;color:#1F6FA6">${heading}</h2>
 <table cellpadding="8" style="border-collapse:collapse;border:1px solid #e4e7ec">${rows
         .map(([k, v]) => `<tr><td style="background:#f8fbfe;color:#667085;font-size:13px">${escapeHtml(k)}</td><td style="font-weight:600;font-size:14px">${escapeHtml(v)}</td></tr>`)
         .join("")}</table>
 <p style="font-size:12px;color:#667085">Lead #${escapeHtml(String(lead._id))} · ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST</p></div>`;
-      sendMail(to, input.kind === "demo" ? `Demo request: ${input.schoolName} (${input.city})` : "Newsletter sign-up", html).catch((err) =>
+      sendMail(to, subject, html).catch((err) =>
         console.warn("[leads] notification email failed:", err instanceof Error ? err.message : err),
       );
     }

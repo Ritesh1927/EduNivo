@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowRight, GraduationCap, Menu, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,15 @@ export function Logo({ light = false }: { light?: boolean }) {
 
 /** Sticky header: transparent over the hero, white + blur once scrolled. Highlights the section in view. */
 export function SiteHeader() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  // Most NAV_LINKS are in-page anchors ("#home", "#pricing", ...), which
+  // only scroll correctly while already on the homepage -- from a
+  // standalone page like /about, a bare "#features" href does nothing.
+  // Resolve those to "/#features" etc. everywhere else so the link
+  // actually navigates home and then scrolls. A real route (e.g.
+  // "/pricing") is left untouched regardless of the current page.
+  const navHref = (href: string) => (href.startsWith("#") && !isHome ? `/${href}` : href);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState("#home");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -33,7 +43,11 @@ export function SiteHeader() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    const sections = NAV_LINKS.map((l) => document.querySelector(l.href)).filter((el): el is Element => !!el);
+    // Only in-page anchors are valid CSS selectors here -- a real route
+    // like "/pricing" would throw if passed to querySelector.
+    const sections = NAV_LINKS.filter((l) => l.href.startsWith("#"))
+      .map((l) => document.querySelector(l.href))
+      .filter((el): el is Element => !!el);
     const io = new IntersectionObserver(
       (entries) => {
         const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
@@ -62,7 +76,7 @@ export function SiteHeader() {
           {NAV_LINKS.map((l) => (
             <a
               key={l.href}
-              href={l.href}
+              href={navHref(l.href)}
               aria-current={active === l.href ? "true" : undefined}
               className={cn(
                 "relative rounded-full px-3 py-2 text-[14px] font-medium whitespace-nowrap transition-colors 2xl:px-3.5 outline-none focus-visible:ring-4 focus-visible:ring-primary/40",
@@ -79,7 +93,7 @@ export function SiteHeader() {
           <Link href="/login" className="rounded-2xl px-4 py-2.5 text-[14.5px] font-semibold whitespace-nowrap text-primary ring-1 ring-primary/25 transition-colors hover:bg-primary/10">
             Login
           </Link>
-          <a href="#contact" className={cn(BTN_PRIMARY, "px-5 py-2.5 text-[14.5px] whitespace-nowrap")}>
+          <a href={navHref("#contact")} className={cn(BTN_PRIMARY, "px-5 py-2.5 text-[14.5px] whitespace-nowrap")}>
             Book Demo
           </a>
         </div>
@@ -107,7 +121,7 @@ export function SiteHeader() {
             {NAV_LINKS.map((l) => (
               <a
                 key={l.href}
-                href={l.href}
+                href={navHref(l.href)}
                 onClick={() => setMenuOpen(false)}
                 className={cn("rounded-xl px-4 py-3 text-[15.5px] font-semibold transition-colors", active === l.href ? "bg-primary/12 text-primary" : "text-foreground hover:bg-[#F8F8FE]")}
               >
@@ -119,7 +133,7 @@ export function SiteHeader() {
             <Link href="/login" className="flex w-full items-center justify-center rounded-2xl py-3 text-[15px] font-semibold text-primary ring-1 ring-primary/25">
               Login
             </Link>
-            <a href="#contact" onClick={() => setMenuOpen(false)} className={cn(BTN_PRIMARY, "w-full")}>
+            <a href={navHref("#contact")} onClick={() => setMenuOpen(false)} className={cn(BTN_PRIMARY, "w-full")}>
               Book Demo <ArrowRight className="h-4 w-4" />
             </a>
           </div>

@@ -241,7 +241,7 @@ export function SiteFooter() {
             </ul>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
             {FOOTER_COLUMNS.map((col) => (
               <nav key={col.title} aria-label={col.title}>
                 <p className="font-heading text-[14px] font-bold tracking-wide text-white">{col.title}</p>

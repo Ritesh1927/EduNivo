@@ -3,13 +3,14 @@ import mongoose, { Schema, type Document, type Model } from "mongoose";
 // Website enquiries from the public homepage: demo requests and newsletter
 // sign-ups. Stored so no lead is lost even if the notification email fails.
 export interface ILead extends Document {
-  kind: "demo" | "newsletter";
+  kind: "demo" | "newsletter" | "contact";
   schoolName: string;
   contactPerson: string;
   phone: string;
   email: string;
   city: string;
   students: string;
+  message: string;
   ipAddress: string;
   userAgent: string;
   createdAt: Date;
@@ -17,13 +18,14 @@ export interface ILead extends Document {
 
 const leadSchema = new Schema<ILead>(
   {
-    kind: { type: String, enum: ["demo", "newsletter"], required: true },
+    kind: { type: String, enum: ["demo", "newsletter", "contact"], required: true },
     schoolName: { type: String, default: "" },
     contactPerson: { type: String, default: "" },
     phone: { type: String, default: "" },
     email: { type: String, required: true, lowercase: true, trim: true },
     city: { type: String, default: "" },
     students: { type: String, default: "" },
+    message: { type: String, default: "" },
     ipAddress: { type: String, default: "" },
     userAgent: { type: String, default: "" },
   },
