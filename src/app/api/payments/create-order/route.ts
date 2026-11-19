@@ -4,6 +4,7 @@ import { getAuthUser } from "@/lib/auth-server";
 import { getRazorpayInstance } from "@/lib/razorpay";
 import { FeePayment } from "@/models/FeePayment";
 import { Parent } from "@/models/Parent";
+import { Admin } from "@/models/Admin";
 
 // POST /api/payments/create-order — parent-only online payment flow (the
 // "feePaymentId" path from SMS-BACKEND's createOrder; the FeeInvoice/
@@ -63,15 +64,32 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "Invalid amount." }, { status: 400 });
     }
 
+    // The whole point of Route is that this school's own money never
+    // pools in the platform's account -- if their payout account isn't
+    // active yet, refuse rather than silently take an un-routed payment.
+    const school = await Admin.findById(auth.schoolId).select("settings.payments");
+    const payoutStatus = school?.settings?.payments?.payoutStatus;
+    const razorpayAccountId = school?.settings?.payments?.razorpayAccountId;
+    if (payoutStatus !== "active" || !razorpayAccountId) {
+      return NextResponse.json(
+        { success: false, message: "This school hasn't finished setting up online payments yet. Ask the school admin to connect a payout account in Settings." },
+        { status: 400 },
+      );
+    }
+
     const razorpay = getRazorpayInstance();
     if (!razorpay) return NextResponse.json({ success: false, message: "Razorpay not configured." }, { status: 500 });
 
+    const amountPaise = Math.round(payAmount * 100);
     const order = await razorpay.orders.create({
-      amount: Math.round(payAmount * 100),
+      amount: amountPaise,
       currency: "INR",
       receipt: `fp_${payableIds[0]}_${Date.now()}`,
       notes: { feePaymentIds: payableIds.join(","), schoolId: String(auth.schoolId) },
-    });
+      // 100% passthrough to the school -- no platform commission taken at
+      // the gateway level (this platform monetizes via subscription plans).
+      transfers: [{ account: razorpayAccountId, amount: amountPaise, currency: "INR", on_hold: 0 }],
+    } as Parameters<typeof razorpay.orders.create>[0]);
 
     return NextResponse.json({
       success: true,

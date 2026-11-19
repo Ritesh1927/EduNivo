@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Loader2, Save, Shield, School, SlidersHorizontal, Bell, DollarSign, Upload, Mail, MessageSquare, CalendarCheck, BookOpen, Lock, AlarmClock, Users, CalendarOff, Trash2, ChevronLeft, ChevronRight, type LucideIcon } from "lucide-react";
+import { Loader2, Save, Shield, School, SlidersHorizontal, Bell, DollarSign, Upload, Mail, MessageSquare, CalendarCheck, BookOpen, Lock, AlarmClock, Users, CalendarOff, Trash2, ChevronLeft, ChevronRight, Wallet, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { getToken } from "@/contexts/AuthContext";
@@ -17,6 +17,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { PageLoader } from "@/components/PageLoader";
 import { getHolidayInfo, getEventInfo } from "@/lib/holidays";
 import { YearSwitchWizard } from "@/components/dashboard/settings/YearSwitchWizard";
+import { PayoutAccountPanel } from "@/components/dashboard/settings/PayoutAccountPanel";
 
 interface SchoolProfile {
   schoolName: string;
@@ -364,6 +365,7 @@ export default function SettingsPage() {
             <TabsTrigger value="notifications" className="gap-1.5"><Bell className="h-3.5 w-3.5" /> Notifications</TabsTrigger>
             <TabsTrigger value="security" className="gap-1.5"><Shield className="h-3.5 w-3.5" /> Security</TabsTrigger>
             <TabsTrigger value="fees" className="gap-1.5"><DollarSign className="h-3.5 w-3.5" /> Fees</TabsTrigger>
+            <TabsTrigger value="payments" className="gap-1.5"><Wallet className="h-3.5 w-3.5" /> Payments</TabsTrigger>
             <TabsTrigger value="holidays" className="gap-1.5"><CalendarOff className="h-3.5 w-3.5" /> Holidays</TabsTrigger>
           </TabsList>
 
@@ -726,6 +728,15 @@ export default function SettingsPage() {
                   )}
                 </div>
               )}
+            </Panel>
+          </TabsContent>
+
+          <TabsContent value="payments" className="mt-4">
+            <Panel icon={Wallet} title="Payout Account" tint="amber">
+              <p className="text-xs text-muted-foreground">
+                Online fee payments from parents are routed directly to this account via Razorpay — this platform never holds or sees your bank details.
+              </p>
+              <PayoutAccountPanel />
             </Panel>
           </TabsContent>
 

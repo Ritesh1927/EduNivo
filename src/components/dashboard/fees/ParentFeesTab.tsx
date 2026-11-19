@@ -68,7 +68,7 @@ interface BrandingResponse {
   success: boolean;
   data: {
     schoolName?: string; schoolAddress?: string; schoolPhone?: string; schoolEmail?: string; logo?: string; themeColor?: string; secondaryColor?: string;
-    settings?: { academicYear?: string; pastAcademicYears?: string[] };
+    settings?: { academicYear?: string; pastAcademicYears?: string[]; payments?: { payoutStatus?: string } };
   };
 }
 
@@ -148,15 +148,19 @@ export default function ParentFeesTab() {
   const [viewYearMessage, setViewYearMessage] = useState("");
   const [loadingViewYear, setLoadingViewYear] = useState(false);
   const [schoolYears, setSchoolYears] = useState<{ currentYear: string; pastYears: string[] }>({ currentYear: "", pastYears: [] });
+  const [payoutActive, setPayoutActive] = useState(true); // optimistic until branding loads, so the button isn't disabled on a flash of missing data
 
   useEffect(() => {
     const token = getToken();
     if (!token) return;
     apiGet<BrandingResponse>("/school/branding", token)
-      .then((res) => setSchoolYears({
-        currentYear: res.data.settings?.academicYear || "",
-        pastYears: res.data.settings?.pastAcademicYears || [],
-      }))
+      .then((res) => {
+        setSchoolYears({
+          currentYear: res.data.settings?.academicYear || "",
+          pastYears: res.data.settings?.pastAcademicYears || [],
+        });
+        setPayoutActive(res.data.settings?.payments?.payoutStatus === "active");
+      })
       .catch(() => {});
   }, []);
 
@@ -385,6 +389,10 @@ export default function ParentFeesTab() {
     if (!child || summary.total <= 0) return;
     if (pastDuesBlockCurrentYear) {
       toast.error(`Clear pending fees from ${child.outstandingPastYears[0].year} before paying this session's fees.`);
+      return;
+    }
+    if (!payoutActive) {
+      toast.error("Online payments aren't set up for this school yet. Contact the school admin.");
       return;
     }
     const token = getToken();
@@ -917,13 +925,15 @@ export default function ParentFeesTab() {
                             onClick={() => {
                               setPayModal({ open: true, lines: summary.lines, total: summary.total });
                             }}
-                            disabled={paying || summary.itemCount === 0 || pastDuesBlockCurrentYear}
+                            disabled={paying || summary.itemCount === 0 || pastDuesBlockCurrentYear || !payoutActive}
                           >
                             {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : <IndianRupee className="h-4 w-4" />}
                             {paying ? "Processing..." : `Pay ₹${summary.total.toLocaleString("en-IN")} via Razorpay`}
                           </Button>
                           {pastDuesBlockCurrentYear ? (
                             <p className="text-center text-xs font-medium text-amber-700 dark:text-amber-400">Clear last year&apos;s pending fees first — see the banner above.</p>
+                          ) : !payoutActive ? (
+                            <p className="text-center text-xs font-medium text-amber-700 dark:text-amber-400">Online payments aren&apos;t set up for this school yet. Contact the school admin.</p>
                           ) : (
                             <p className="text-center text-xs text-muted-foreground">Online payment via Razorpay — full amount only</p>
                           )}

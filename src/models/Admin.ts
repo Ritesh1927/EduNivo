@@ -75,6 +75,21 @@ export interface IAdmin extends Document {
     // attendance marking. Kept as a separate array rather than folded into
     // holidays.dates so the two stay independently meaningful.
     events: { _id: mongoose.Types.ObjectId; date: Date; name: string }[];
+    /**
+     * Razorpay Route payout account for this school. Written only by
+     * POST /api/payments/payout-account and the Razorpay webhook, never the
+     * generic settings PATCH -- same "too consequential for a blind merge"
+     * reasoning as yearSwitch above. No bank/IFSC details are ever stored
+     * here -- razorpayAccountId is just a reference id; the school's actual
+     * banking details live with Razorpay, entered on their hosted page.
+     */
+    payments: {
+      razorpayAccountId: string;
+      payoutStatus: "not_connected" | "pending" | "active" | "rejected";
+      onboardingUrl: string;
+      rejectionReason: string;
+      connectedAt: Date | null;
+    };
   };
   comparePassword(candidate: string): Promise<boolean>;
 }
@@ -143,6 +158,13 @@ const adminSchema = new Schema<IAdmin>(
         dates: [{ date: { type: Date, required: true }, name: { type: String, required: true, trim: true } }],
       },
       events: [{ date: { type: Date, required: true }, name: { type: String, required: true, trim: true } }],
+      payments: {
+        razorpayAccountId: { type: String, default: "" },
+        payoutStatus: { type: String, enum: ["not_connected", "pending", "active", "rejected"], default: "not_connected" },
+        onboardingUrl: { type: String, default: "" },
+        rejectionReason: { type: String, default: "" },
+        connectedAt: { type: Date, default: null },
+      },
     },
   },
   { timestamps: true },
