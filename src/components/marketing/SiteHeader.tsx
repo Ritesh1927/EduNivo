@@ -35,13 +35,23 @@ export function SiteHeader() {
   // "/pricing") is left untouched regardless of the current page.
   const navHref = (href: string) => (href.startsWith("#") && !isHome ? `/${href}` : href);
   const [scrolled, setScrolled] = useState(false);
-  const [active, setActive] = useState("#home");
+  const [scrollActive, setScrollActive] = useState("#home");
   const [menuOpen, setMenuOpen] = useState(false);
+  // On the homepage, which section is highlighted comes from scroll
+  // position (scrollActive, below). On a standalone page like /pricing,
+  // there's no scrolling section to track -- SiteHeader is also rendered
+  // fresh per page (no shared layout ties these pages together), so
+  // scrollActive would otherwise just sit at its stale initial value
+  // forever. Highlight whichever NAV_LINKS entry is a real route matching
+  // the current path instead (today, only "Pricing" -> "/pricing" is).
+  const active = isHome ? scrollActive : NAV_LINKS.find((l) => !l.href.startsWith("#") && l.href === pathname)?.href;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+
+    if (!isHome) return () => window.removeEventListener("scroll", onScroll);
 
     // Only in-page anchors are valid CSS selectors here -- a real route
     // like "/pricing" would throw if passed to querySelector.
@@ -51,7 +61,7 @@ export function SiteHeader() {
     const io = new IntersectionObserver(
       (entries) => {
         const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible) setActive(`#${visible.target.id}`);
+        if (visible) setScrollActive(`#${visible.target.id}`);
       },
       { rootMargin: "-35% 0px -55% 0px", threshold: [0, 0.25, 0.5, 1] },
     );
@@ -60,7 +70,7 @@ export function SiteHeader() {
       window.removeEventListener("scroll", onScroll);
       io.disconnect();
     };
-  }, []);
+  }, [isHome]);
 
   return (
     <header
