@@ -131,7 +131,7 @@ export const FAQS = [
 export const FOOTER_COLUMNS = [
   { title: "Company", links: [{ label: "About Us", href: "/about" }, { label: "Why EduNivo", href: "/#why" }, { label: "Pricing", href: "/pricing" }, { label: "Testimonials", href: "/#testimonials" }, { label: "Contact", href: "/contact" }] },
   { title: "Modules", links: [{ label: "Admissions", href: "/#modules" }, { label: "Attendance", href: "/#modules" }, { label: "Fees & Payment", href: "/#modules" }, { label: "Examination", href: "/#modules" }, { label: "Parent App", href: "/#apps" }] },
-  { title: "Resources", links: [{ label: "Product Tour", href: "/#features" }, { label: "How It Works", href: "/#how" }, { label: "FAQs", href: "/#faq" }, { label: "Mobile Apps", href: "/#apps" }] },
+  { title: "Resources", links: [{ label: "User Guide", href: "/guide" }, { label: "Product Tour", href: "/#features" }, { label: "How It Works", href: "/#how" }, { label: "FAQs", href: "/#faq" }, { label: "Mobile Apps", href: "/#apps" }] },
   { title: "Support", links: [{ label: "Book a Demo", href: "/contact" }, { label: "Login", href: "/login" }, { label: "Help Center", href: "/#faq" }] },
   { title: "Legal", links: [{ label: "Terms & Conditions", href: "/terms" }, { label: "Privacy Policy", href: "/privacy" }, { label: "Refund Policy", href: "/refund-policy" }] },
 ];

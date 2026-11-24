@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, GraduationCap, UserRound, School, Link2, CalendarCheck,
   BookOpen, CalendarClock, ClipboardList, Library, IndianRupee, Megaphone, MessageSquare,
-  BarChart3, Trophy, Brain, Activity, Settings, TrendingUp, LogOut, Shield, UserCog,
+  BarChart3, Trophy, Brain, Activity, Settings, TrendingUp, LogOut, Shield, UserCog, BookOpenCheck,
   GraduationCap as Logo,
 } from "lucide-react";
 import {
@@ -304,6 +304,15 @@ export function AppSidebar({ user, unreadCount, onLogout }: { user: AuthUser; un
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
           </div>
+          <a
+            href="/guide"
+            target="_blank"
+            rel="noopener"
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:pl-4"
+          >
+            <BookOpenCheck className="h-4 w-4 shrink-0" />
+            <span className="group-data-[collapsible=icon]:hidden">User Guide</span>
+          </a>
           <button
             onClick={onLogout}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:pl-4"
