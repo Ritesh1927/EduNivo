@@ -161,7 +161,7 @@ export function MobileProfileSheet({
               type="button"
               onClick={() => {
                 onOpenChange(false);
-                router.push("/guide");
+                router.push("/dashboard/guide");
               }}
               className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-3.5 text-left shadow-sm transition-all active:scale-[0.98] active:bg-muted/60"
             >

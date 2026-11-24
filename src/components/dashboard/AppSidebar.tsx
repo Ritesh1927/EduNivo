@@ -304,15 +304,15 @@ export function AppSidebar({ user, unreadCount, onLogout }: { user: AuthUser; un
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
           </div>
-          <a
-            href="/guide"
-            target="_blank"
-            rel="noopener"
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:pl-4"
+          <Link
+            href="/dashboard/guide"
+            className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:pl-4 ${
+              pathname === "/dashboard/guide" ? "bg-accent/10 text-primary font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
           >
             <BookOpenCheck className="h-4 w-4 shrink-0" />
             <span className="group-data-[collapsible=icon]:hidden">User Guide</span>
-          </a>
+          </Link>
           <button
             onClick={onLogout}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:pl-4"
