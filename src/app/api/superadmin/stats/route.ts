@@ -7,7 +7,7 @@ import { Student } from "@/models/Student";
 import { Parent } from "@/models/Parent";
 
 export async function GET(req: Request) {
-  const auth = requireSuperAdmin(req);
+  const auth = await requireSuperAdmin(req);
   if ("error" in auth) return auth.error;
 
   try {

@@ -6,7 +6,7 @@ import { Admin } from "@/models/Admin";
 import { generatePassword, hashPassword } from "@/lib/helpers";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = requireSuperAdmin(req);
+  const auth = await requireSuperAdmin(req);
   if ("error" in auth) return auth.error;
 
   try {

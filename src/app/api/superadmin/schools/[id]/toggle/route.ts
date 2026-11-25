@@ -5,7 +5,7 @@ import { School } from "@/models/School";
 import { Admin } from "@/models/Admin";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = requireSuperAdmin(req);
+  const auth = await requireSuperAdmin(req);
   if ("error" in auth) return auth.error;
 
   try {

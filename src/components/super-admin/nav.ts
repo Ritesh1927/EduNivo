@@ -1,5 +1,5 @@
 import {
-  Archive, Bug, Crown, LayoutDashboard, LifeBuoy, School, Settings2, type LucideIcon,
+  Archive, Bug, Crown, LayoutDashboard, LifeBuoy, School, Settings2, ShieldCheck, type LucideIcon,
 } from "lucide-react";
 
 // Super Admin navigation -- the single source for the sidebar, breadcrumbs
@@ -66,6 +66,14 @@ export const SA_NAV_GROUPS: SaNavGroup[] = [
       { href: "/super-admin/tickets/archive", label: "Solved Archive", icon: Archive, description: "Past fixes, searchable", hidden: true },
       { href: "/super-admin/tickets/settings", label: "Ticket Settings", icon: Settings2, description: "Retention and upload limits", hidden: true },
       { href: "/super-admin/report-bug", label: "Report a Bug", icon: Bug, description: "File a ticket as System Administrator", hidden: true },
+    ],
+  },
+  {
+    id: "platform",
+    label: "Platform",
+    icon: ShieldCheck,
+    items: [
+      { href: "/super-admin/admins", label: "Super Admins", icon: ShieldCheck, description: "Add or remove people who can run the platform" },
     ],
   },
 ];

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { verifyToken, type TokenPayload } from "@/lib/helpers";
+import { connectDB } from "@/lib/db";
 import { Teacher } from "@/models/Teacher";
+import { SuperAdmin } from "@/models/SuperAdmin";
 // Side-effect import: registers the Role model so .populate("staffRole")
 // below resolves even when this route is bundled in isolation (Next.js
 // serverless bundles are per-route -- an import type alone is erased and
@@ -28,11 +30,19 @@ export function getAuthUser(req: Request): TokenPayload | null {
 
 type SuperAdminResult = { auth: TokenPayload } | { error: NextResponse };
 
-// Shared by every protected /api/superadmin/* route.
-export function requireSuperAdmin(req: Request): SuperAdminResult {
+// Shared by every protected /api/superadmin/* route. Besides the token, it
+// confirms the account still exists and is active, so a Super Admin removed
+// from the panel loses access on their very next request rather than
+// whenever their token happens to expire.
+export async function requireSuperAdmin(req: Request): Promise<SuperAdminResult> {
   const auth = getAuthUser(req);
   if (!auth || auth.role !== "superadmin") {
     return { error: NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 }) };
+  }
+  await connectDB();
+  const account = await SuperAdmin.findById(auth.id).select("isActive").lean();
+  if (!account || !account.isActive) {
+    return { error: NextResponse.json({ success: false, message: "Your Super Admin access has been removed." }, { status: 401 }) };
   }
   return { auth };
 }

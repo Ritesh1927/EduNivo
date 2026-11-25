@@ -15,7 +15,7 @@ const MONTHS_FULL = [
 ];
 
 export async function GET(req: Request) {
-  const auth = requireSuperAdmin(req);
+  const auth = await requireSuperAdmin(req);
   if ("error" in auth) return auth.error;
 
   try {
@@ -72,7 +72,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^\d{10}$/;
 
 export async function POST(req: Request) {
-  const auth = requireSuperAdmin(req);
+  const auth = await requireSuperAdmin(req);
   if ("error" in auth) return auth.error;
 
   try {

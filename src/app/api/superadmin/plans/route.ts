@@ -4,7 +4,7 @@ import { requireSuperAdmin } from "@/lib/auth-server";
 import { Plan } from "@/models/Plan";
 
 export async function GET(req: Request) {
-  const auth = requireSuperAdmin(req);
+  const auth = await requireSuperAdmin(req);
   if ("error" in auth) return auth.error;
 
   try {
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const auth = requireSuperAdmin(req);
+  const auth = await requireSuperAdmin(req);
   if ("error" in auth) return auth.error;
 
   try {
