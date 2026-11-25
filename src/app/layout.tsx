@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Plus_Jakarta_Sans, DM_Sans, Lora } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
@@ -9,32 +9,34 @@ import { UpdateBanner } from "@/components/pwa/UpdateBanner";
 import { APP_NAME } from "@/pwa/config";
 import { HOME_REDIRECT_SCRIPT } from "@/components/marketing/homeRedirectScript";
 
-// Same two Google Fonts as the original SMS-FRONTEND (Plus Jakarta Sans for
-// headings, DM Sans for body text) so sms-next's typography matches it.
-const dmSans = DM_Sans({
+// Self-hosted (latin subset, variable woff2 files in ./fonts) rather than
+// next/font/google: fetching from Google Fonts at build time failed
+// intermittently and broke builds on Vercel and on the VPS alike. Plus
+// Jakarta Sans for headings, DM Sans for body text.
+const dmSans = localFont({
   variable: "--font-dm-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  src: [{ path: "./fonts/dm-sans.woff2", weight: "400 600", style: "normal" }],
+  display: "swap",
 });
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const plusJakartaSans = localFont({
   variable: "--font-plus-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  src: [{ path: "./fonts/plus-jakarta-sans.woff2", weight: "400 800", style: "normal" }],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  src: [{ path: "./fonts/geist-mono.woff2", weight: "100 900", style: "normal" }],
+  display: "swap",
 });
 
 // Elegant serif for the dashboard hero's rotating quote -- gives it a
 // distinct "pull-quote" character instead of reading as more body text.
-const lora = Lora({
+const lora = localFont({
   variable: "--font-lora",
-  subsets: ["latin"],
-  style: ["italic"],
-  weight: ["500", "600"],
+  src: [{ path: "./fonts/lora-italic.woff2", weight: "500 600", style: "italic" }],
+  display: "swap",
 });
 
 export const metadata: Metadata = {

@@ -24,11 +24,11 @@ export const SERVICE_WORKER_URL = "/sw.js";
 
 export const STORAGE_KEYS = {
   /** localStorage: timestamp of the last "Maybe Later" / dismissal. */
-  dismissedAt: "sms_next_pwa_install_dismissed_at",
+  dismissedAt: "edunivo_pwa_install_dismissed_at",
   /** localStorage: set once the browser reports a successful install. */
-  installed: "sms_next_pwa_installed",
+  installed: "edunivo_pwa_installed",
   /** sessionStorage: the dialog already auto-opened in this tab session. */
-  shownThisSession: "sms_next_pwa_install_shown",
+  shownThisSession: "edunivo_pwa_install_shown",
 } as const;
 
 /** Custom link scheme the installed app handles (manifest protocol_handlers). */

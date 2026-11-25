@@ -48,8 +48,8 @@ interface AuthContextType {
   logout: () => void;
 }
 
-const TOKEN_KEY = "sms_next_token";
-const USER_KEY = "sms_next_user";
+const TOKEN_KEY = "edunivo_token";
+const USER_KEY = "edunivo_user";
 
 const AuthContext = createContext<AuthContextType | null>(null);
 

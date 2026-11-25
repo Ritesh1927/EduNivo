@@ -23,7 +23,7 @@ interface ClassBucket {
 // GET /api/ai/school-context — builds the same rich, live-data snapshot
 // SMS-BACKEND's getSchoolContext does, used to ground the admin "School
 // Insights" chat so it can answer with real names/amounts instead of
-// generic advice. Adapted to sms-next's schema shapes: AttendanceRecord is
+// generic advice. Adapted to EduNivo's schema shapes: AttendanceRecord is
 // one document per student per day here (vs. the original's per-day doc
 // with an embedded records[] array), which actually simplifies this pass.
 export async function GET(req: Request) {

@@ -1,8 +1,8 @@
 // Super Admin sessions are a separate, top-level auth track from the
 // school-scoped AuthContext (different role, different login flow, never
 // mixed with a schooladmin/teacher/parent/student session in the same tab).
-const TOKEN_KEY = "sms_next_superadmin_token";
-const USER_KEY = "sms_next_superadmin_user";
+const TOKEN_KEY = "edunivo_superadmin_token";
+const USER_KEY = "edunivo_superadmin_user";
 
 export interface SuperAdminUser {
   id: string;

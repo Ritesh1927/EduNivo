@@ -124,7 +124,7 @@ const FREQ_META: Record<string, { icon: typeof CalendarDays; chip: string; unit:
   },
 };
 
-const SELECTED_CHILD_KEY = "sms_next_parent_selectedChild";
+const SELECTED_CHILD_KEY = "edunivo_parent_selectedChild";
 
 export default function ParentFeesTab() {
   const [children, setChildren] = useState<ChildFees[]>([]);

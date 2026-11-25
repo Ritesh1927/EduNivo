@@ -12,9 +12,16 @@
 // internal admin console from a stale token (no re-auth) on a link anyone
 // could open is a bigger surprise than convenience. A superadmin returns via
 // their own bookmark/URL to /super-admin instead.
+//
+// It also runs first on EVERY page, before any app code, so it carries
+// browser-storage keys over from the old "sms_next_" prefix to "edunivo_":
+// existing users keep their login, chosen child and preferences instead of
+// being signed out by the rename.
 export const HOME_REDIRECT_SCRIPT = `(function(){try{
+[localStorage,sessionStorage].forEach(function(st){for(var i=st.length-1;i>=0;i--){var k=st.key(i);if(k&&k.indexOf('sms_next_')===0){var n='edunivo_'+k.slice(9);if(st.getItem(n)===null)st.setItem(n,st.getItem(k));st.removeItem(k);}}});
+}catch(e){}try{
 if(location.pathname!=="/")return;
 var s=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
-var t=localStorage.getItem('sms_next_user')?'/dashboard':s?'/login':null;
+var t=localStorage.getItem('edunivo_user')?'/dashboard':s?'/login':null;
 if(t){document.documentElement.style.visibility='hidden';location.replace(t);}
 }catch(e){}})();`;

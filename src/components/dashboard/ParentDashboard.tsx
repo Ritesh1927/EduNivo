@@ -78,7 +78,7 @@ interface OverviewData {
   notices: NoticeRow[];
 }
 
-const CHILD_KEY = "sms_next_parent_selectedChild";
+const CHILD_KEY = "edunivo_parent_selectedChild";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 const DAY_TABS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 

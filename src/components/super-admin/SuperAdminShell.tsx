@@ -13,8 +13,8 @@ import { CommandPalette } from "./CommandPalette";
 import { TICKETS_UNREAD_CHANGED_EVENT } from "./events";
 import { pageTitleFor } from "./nav";
 
-const COLLAPSED_KEY = "sms_next_sa_sidebar_collapsed";
-const THEME_KEY = "sms_next_sa_theme";
+const COLLAPSED_KEY = "edunivo_sa_sidebar_collapsed";
+const THEME_KEY = "edunivo_sa_theme";
 const UNREAD_POLL_MS = 30_000;
 
 function readStorage(key: string): string | null {

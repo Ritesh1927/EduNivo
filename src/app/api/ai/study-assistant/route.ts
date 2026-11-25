@@ -9,7 +9,7 @@ import { chat, type ChatMessage } from "@/lib/ai";
 // `question`). Matches SMS-FRONTEND's AiPage.tsx exactly: none of those
 // tools actually call their own dedicated backend routes.
 //
-// No student role exists in sms-next, so the plain student-tutor framing
+// No student role exists in EduNivo, so the plain student-tutor framing
 // (subject !== "school management") is kept only for teacher/admin use —
 // e.g. a teacher asking a subject question while drafting homework help.
 export async function POST(req: Request) {

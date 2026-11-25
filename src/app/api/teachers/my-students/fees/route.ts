@@ -20,7 +20,7 @@ interface StudentFeeRow {
 // GET /api/teachers/my-students/fees — read-only fee summary for the
 // students in classes this teacher is the class teacher of. Matches
 // SMS-BACKEND's getMyStudentsFees, minus the FeeInvoice fallback layer
-// (sms-next only has FeePayment records, no separate invoice model).
+// (EduNivo only has FeePayment records, no separate invoice model).
 export async function GET(req: Request) {
   const auth = getAuthUser(req);
   if (!auth || auth.role !== "teacher") {

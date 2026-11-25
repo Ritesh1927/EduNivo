@@ -83,7 +83,7 @@ Login → protected layout mounts → InstallPromptGate starts a 4.5 s timer
   - `browser-menu`: no one-click install is available (Firefox, or a Chromium tab that isn't eligible yet). The install button is hidden and an informational message appears instead: browser-menu steps on Chromium, or "open in Chrome, Edge or Brave" elsewhere. The only button is **Continue in Browser**.
 
   The mode is captured when the dialog opens, so its content never flips mid-install.
-- **`appinstalled`** stores `sms_next_pwa_installed` and closes everything.
+- **`appinstalled`** stores `edunivo_pwa_installed` and closes everything.
 
 ### Already-installed detection
 
@@ -94,7 +94,7 @@ Login → protected layout mounts → InstallPromptGate starts a 4.5 s timer
 | `document.referrer` starts with `android-app://` | Android TWA wrappers |
 | `beforeinstallprompt` **does not fire** once installed | Chromium (Android, Windows, macOS, ChromeOS, Linux) |
 | `navigator.getInstalledRelatedApps()` (manifest lists itself in `related_applications`) | Chromium. Catches installs made via the browser UI. Best effort: an app installed before this field existed reports nothing until Chrome refreshes its manifest |
-| `appinstalled` event and the stored `sms_next_pwa_installed` flag | Chromium. On Safari, set by the user's "I've added it" |
+| `appinstalled` event and the stored `edunivo_pwa_installed` flag | Chromium. On Safari, set by the user's "I've added it" |
 
 On Chromium, the browser's own event is the source of truth. A stale stored flag is overridden as soon as `beforeinstallprompt` fires again, for example after an uninstall.
 
@@ -181,7 +181,7 @@ npm run build && npm run start        # http://localhost:3000
 
 - **DevTools → Application → Manifest:** check fields and icons, and install with "Install" in the address bar.
 - **DevTools → Application → Service workers / Cache storage:** see the registered worker and the `edunivo-*` caches. No `/api` entries should ever appear.
-- **Install dialog:** clear `sms_next_pwa_install_dismissed_at` (localStorage) and `sms_next_pwa_install_shown` (sessionStorage), then log in. The dialog appears about 4.5 s after the dashboard loads, if Chrome considers the app installable. Check `chrome://flags` and site engagement if the event doesn't fire.
+- **Install dialog:** clear `edunivo_pwa_install_dismissed_at` (localStorage) and `edunivo_pwa_install_shown` (sessionStorage), then log in. The dialog appears about 4.5 s after the dashboard loads, if Chrome considers the app installable. Check `chrome://flags` and site engagement if the event doesn't fire.
 - **Update banner:** with a tab open, run `npm run build && npm run start` again, then focus the tab or run `(await navigator.serviceWorker.getRegistration()).update()` in the console.
 - **Offline:** DevTools → Network → Offline, then reload a visited page (cached shell) and an unvisited one (`offline.html`).
 - **iOS:** needs a real device or the Simulator on HTTPS. Use a deployed preview, or `next dev --experimental-https` for UI-only checks (the service worker is off in dev).

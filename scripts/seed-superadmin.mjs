@@ -1,6 +1,7 @@
-// One-off dev script: creates (or resets) the SuperAdmin account directly,
-// bypassing the OTP-based signup flow — same pattern SMS-BACKEND used for
-// its own seedSuperAdmin(). Run with: node scripts/seed-superadmin.mjs
+// Creates (or resets) the SuperAdmin account directly, bypassing the
+// OTP-based signup flow. The credentials are never stored in this file --
+// the repo is public -- so they must be passed in at run time:
+//   SUPERADMIN_EMAIL=you@example.com SUPERADMIN_PASSWORD='<strong password>' node scripts/seed-superadmin.mjs
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
@@ -10,9 +11,14 @@ import dns from "dns";
 // this project's actual secrets file) is ".env.local".
 dotenv.config({ path: ".env.local" });
 
-const EMAIL = "riteshydv1927@gmail.com";
-const PASSWORD = "sms-next-password";
+const EMAIL = process.env.SUPERADMIN_EMAIL;
+const PASSWORD = process.env.SUPERADMIN_PASSWORD;
 const NAME = "Super Admin";
+
+if (!EMAIL || !PASSWORD || PASSWORD.length < 12) {
+  console.error("Set SUPERADMIN_EMAIL and SUPERADMIN_PASSWORD (at least 12 characters) when running this script.");
+  process.exit(1);
+}
 
 if (process.env.MONGO_URI?.startsWith("mongodb+srv://")) {
   dns.setServers(["8.8.8.8", "1.1.1.1"]);
