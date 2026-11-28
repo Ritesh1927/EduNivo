@@ -16,7 +16,8 @@ export const BRAND = {
   tagline: "School ERP",
   email: "contact@eleviqtechnologies.com",
   phone: "+91 96546 63440",
-  address: "House No. 17A, Street No. 19D, Molarband Extension, Badarpur Border, New Delhi, Delhi",
+  /** Exactly as on the GST registration certificate (principal place of business) -- payment-gateway KYC cross-checks it. */
+  address: "H No-17, Galli No-17-E-19, Molarband Extension, New Delhi, South Delhi, Delhi 110044",
   /** Registered legal entity operating EduNivo -- a proprietorship, so the proprietor's name is the legal identity. */
   legalEntity: "ElevIQ Technologies",
   proprietor: "Upasana Yadav",
